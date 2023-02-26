@@ -1,6 +1,24 @@
 import json
 
-# import requests
+from .demo_dynamo_store import save_demo_data
+
+
+def create_base_response(body: object, status: int):
+    return {
+        "statusCode": status,
+        "body": json.dumps(body),
+    }
+
+
+def run_post_event(event_body):
+
+    save_demo_data(json.loads(event_body)["userName"])
+
+    return create_base_response({"message": "data stored"}, 200)
+
+
+def run_get_event(eventBody):
+    return create_base_response({"message": "hi"}, 200)
 
 
 def lambda_handler(event, context):
@@ -25,18 +43,12 @@ def lambda_handler(event, context):
         Return doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
     """
 
-    # try:
-    #     ip = requests.get("http://checkip.amazonaws.com/")
-    # except requests.RequestException as e:
-    #     # Send some context about this error to Lambda Logs
-    #     print(e)
-
-    #     raise e
-
-    return {
-        "statusCode": 200,
-        "body": json.dumps({
-            "message": "hello world",
-            # "location": ip.text.replace("\n", "")
-        }),
-    }
+    if event["httpMethod"] == "POST":
+        return run_post_event(event["body"])
+    elif event["httpMethod"] == "GET":
+        return run_get_event(event["body"])
+    else:
+        return {
+            "statusCode": 500,
+            "errorType": "MethodNotSupported"
+        }
